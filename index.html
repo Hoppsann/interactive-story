@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The world is burning</title>
+    <style>
+        :root {
+            color-scheme: dark;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html, body {
+            margin: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #111;
+            font-family: sans-serif;
+        }
+
+        body {
+            display: grid;
+            place-items: center;
+        }
+
+        #app {
+            width: 100vw;
+            height: 100vh;
+        }
+
+        #app svg {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            background: #111;
+        }
+
+        .is-clickable {
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <main id="app" aria-live="polite"></main>
+    <script src="storyTree.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
