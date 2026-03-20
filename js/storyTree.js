@@ -206,7 +206,7 @@ const storyTree = {
     "listen4-no": {
         file: "assets/listen4-no.svg",
         buttons: [
-            { id: "next", next: "listen-laborweapon" }
+            { id: "next", next: "listen-enterrocket" }
         ]
     },
     "listen-laborweapon": {

@@ -3,18 +3,25 @@ const startSceneId = "intro";
 let currentSceneId = "intro";
 let autoAdvanceTimeoutId = null;
 
+// Create two layers for crossfading
+const layerA = document.createElement("div");
+const layerB = document.createElement("div");
+layerA.className = "layer";
+layerB.className = "layer hidden";
+app.appendChild(layerA);
+app.appendChild(layerB);
+
+let activeLayer = layerA;
+let inactiveLayer = layerB;
+
 async function loadScene(sceneId) {
     clearPendingAutoAdvance();
-
-    // Fade out
-    app.classList.add("is-transitioning");
-    await new Promise(resolve => setTimeout(resolve, 300));
 
     const scene = storyTree[sceneId];
 
     if (!scene) {
-        app.innerHTML = `<p style="color:white;text-align:center;">Unknown scene: ${sceneId}</p>`;
-        app.classList.remove("is-transitioning");
+        inactiveLayer.innerHTML = `<p style="color:white;text-align:center;">Unknown scene: ${sceneId}</p>`;
+        crossfade();
         return;
     }
 
@@ -22,34 +29,43 @@ async function loadScene(sceneId) {
         const response = await fetch(scene.file);
         if (!response.ok) {
             console.log(`Could not load ${scene.file}`);
-            app.innerHTML = `<p style="color:white;text-align:center;">Could not load ${scene.file}</p>`;
-            app.classList.remove("is-transitioning");
+            inactiveLayer.innerHTML = `<p style="color:white;text-align:center;">Could not load ${scene.file}</p>`;
+            crossfade();
             return;
         }
 
         const svgMarkup = await response.text();
-        app.innerHTML = svgMarkup;
+        inactiveLayer.innerHTML = svgMarkup;
 
-        const svg = app.querySelector("svg");
+        const svg = inactiveLayer.querySelector("svg");
 
         if (!svg) {
             console.log(`${scene.file} does not contain an SVG.`);
-            app.innerHTML = `<p style="color:white;text-align:center;">${scene.file} does not contain an SVG.</p>`;
-            app.classList.remove("is-transitioning");
+            inactiveLayer.innerHTML = `<p style="color:white;text-align:center;">${scene.file} does not contain an SVG.</p>`;
+            crossfade();
             return;
         }
 
         svg.setAttribute("preserveAspectRatio", "xMidYMid meet");
         bindNavigation(svg, scene);
-
-        // Fade back in
-        app.classList.remove("is-transitioning");
+        crossfade();
 
     } catch (error) {
         console.log(error);
-        app.innerHTML = `<p style="color:white;text-align:center;">${error.message}</p>`;
-        app.classList.remove("is-transitioning");
+        inactiveLayer.innerHTML = `<p style="color:white;text-align:center;">${error.message}</p>`;
+        crossfade();
     }
+}
+
+function crossfade() {
+    // Bring inactive layer to front and fade it in
+    inactiveLayer.style.zIndex = 1;
+    activeLayer.style.zIndex = 0;
+    inactiveLayer.classList.remove("hidden");
+    activeLayer.classList.add("hidden");
+
+    // Swap roles
+    [activeLayer, inactiveLayer] = [inactiveLayer, activeLayer];
 }
 
 function bindNavigation(svg, scene) {
@@ -73,20 +89,13 @@ function bindNavigation(svg, scene) {
         }
 
         const target = svg.querySelector(`[id="${button.id}"]`);
-
-        if (!target) {
-            continue;
-        }
+        if (!target) continue;
 
         target.classList.add("is-clickable");
 
-        const goToNext = () => {
+        target.addEventListener("click", () => {
             currentSceneId = button.next;
             loadScene(currentSceneId);
-        };
-
-        target.addEventListener("click", () => {
-            goToNext();
         });
     }
 }

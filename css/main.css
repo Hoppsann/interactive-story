@@ -1,4 +1,3 @@
-
 :root {
     color-scheme: dark;
 }
@@ -24,14 +23,16 @@ body {
 #app {
     width: 100vw;
     height: 100vh;
-    transition: opacity 0.3s ease;
+    position: relative;
 }
 
-#app.is-transitioning {
-    opacity: 0;
+#app .layer {
+    position: absolute;
+    inset: 0;
+    transition: opacity 0.4s ease;
 }
 
-#app svg {
+#app .layer svg {
     display: block;
     width: 100%;
     height: 100%;
@@ -39,9 +40,14 @@ body {
     background: #111;
 }
 
+#app .layer.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
 .is-clickable {
     cursor: pointer;
-    transition: 0.1s;
+    transition: filter 0.1s ease;
 }
 
 .is-clickable:hover {
