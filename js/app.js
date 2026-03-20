@@ -13,12 +13,16 @@ app.appendChild(layerB);
 let activeLayer = layerA;
 let inactiveLayer = layerB;
 
+const music = new Audio("sound/music.mp3");
+music.loop = true;
+music.volume = 0.3;
+
+document.addEventListener("click", () => music.play(), { once: true });
+
 const sounds = {
     click: new Audio("sound/click.mp3"),
     fire: new Audio("sound/fire.mp3")
 };
-
-fire.
 
 function playSound(name) {
     const sound = sounds[name];
