@@ -1,6 +1,6 @@
 const app = document.getElementById("app");
 const startSceneId = "run";
-let currentSceneId = "intro";
+let currentSceneId = localStorage.getItem("currentSceneId") || "intro";
 let autoAdvanceTimeoutId = null;
 
 const layerA = document.createElement("div");
@@ -13,16 +13,16 @@ app.appendChild(layerB);
 let activeLayer = layerA;
 let inactiveLayer = layerB;
 
-const music = new Audio("sound/music.mp3");
-music.loop = true;
-music.volume = 0.3;
-
-document.addEventListener("click", () => music.play(), { once: true });
-
 const sounds = {
     click: new Audio("sound/click.mp3"),
     fire: new Audio("sound/fire.mp3")
 };
+
+const music = new Audio("sound/music.mp3");
+music.loop = true;
+music.volume = 0.5;
+
+document.addEventListener("click", () => music.play(), { once: true });
 
 function playSound(name) {
     const sound = sounds[name];
@@ -33,6 +33,7 @@ function playSound(name) {
 
 async function loadScene(sceneId) {
     clearPendingAutoAdvance();
+    localStorage.setItem("currentSceneId", sceneId);
 
     const scene = storyTree[sceneId];
 
