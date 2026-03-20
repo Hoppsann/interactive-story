@@ -13,6 +13,18 @@ app.appendChild(layerB);
 let activeLayer = layerA;
 let inactiveLayer = layerB;
 
+
+const sounds = {
+    click: new Audio("sound/click.mp3"),
+};
+
+function playSound(name) {
+    const sound = sounds[name];
+    if (!sound) return;
+    sound.currentTime = 0;
+    sound.play();
+}
+
 async function loadScene(sceneId) {
     clearPendingAutoAdvance();
 
@@ -72,7 +84,6 @@ function highlightByColor(svg, targetHex) {
     const allElements = svg.querySelectorAll("*");
 
     for (const el of allElements) {
-
         const attrFill = el.getAttribute("fill")?.toLowerCase();
         const attrStroke = el.getAttribute("stroke")?.toLowerCase();
 
@@ -80,7 +91,6 @@ function highlightByColor(svg, targetHex) {
             el.classList.add("is-animated");
             continue;
         }
-
 
         const style = getComputedStyle(el);
         const computedFill = rgbToHex(style.fill);
@@ -126,6 +136,7 @@ function bindNavigation(svg, scene) {
         target.classList.add("is-clickable");
 
         target.addEventListener("click", () => {
+            playSound("click");
             currentSceneId = button.next;
             loadScene(currentSceneId);
         });
