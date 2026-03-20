@@ -1,9 +1,8 @@
 const app = document.getElementById("app");
-const startSceneId = "intro";
+const startSceneId = "run";
 let currentSceneId = "intro";
 let autoAdvanceTimeoutId = null;
 
-// Create two layers for crossfading
 const layerA = document.createElement("div");
 const layerB = document.createElement("div");
 layerA.className = "layer";
