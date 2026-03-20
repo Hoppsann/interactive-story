@@ -18,6 +18,7 @@ html, body {
 body {
     display: grid;
     place-items: center;
+    margin: 0;
 }
 
 #app {
@@ -74,4 +75,34 @@ body {
         transform: scale(1.01);
         opacity: 0.85;
     }
+}
+
+
+
+button {
+    position: absolute;
+    margin: 1vw;
+    width: 11%;
+    height: 11%;
+    left: 0;
+    top: 0;
+    z-index: 1;
+    border-radius: 100vw;
+    border: 0.1vw solid rgba(255, 255, 255, 0.5);
+    font-size: 2vw;
+    background: none;
+    backdrop-filter: blur(0.5vw);
+    box-shadow: 0px 0.25vw 1vw black;
+    text-shadow: 0px 0.25vw 0.3vw black;
+    cursor: pointer;
+}
+
+p {
+    position: absolute;
+    z-index: 1;
+    width: 10vw;
+    right: 0;
+    top: 0;
+    margin: 1.5vw;
+    font-size: 1.5vw;
 }

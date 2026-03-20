@@ -2,6 +2,8 @@ const app = document.getElementById("app");
 const startSceneId = "run";
 let currentSceneId = localStorage.getItem("currentSceneId") || "intro";
 let autoAdvanceTimeoutId = null;
+let currentSvg = null;
+let currentScene = null;
 
 const layerA = document.createElement("div");
 const layerB = document.createElement("div");
@@ -31,11 +33,18 @@ function playSound(name) {
     sound.play();
 }
 
+function resetGame() {
+    localStorage.removeItem("currentSceneId");
+    currentSceneId = "intro";
+    loadScene(currentSceneId);
+}
+
 async function loadScene(sceneId) {
     clearPendingAutoAdvance();
     localStorage.setItem("currentSceneId", sceneId);
 
     const scene = storyTree[sceneId];
+    currentScene = scene;
 
     if (!scene) {
         inactiveLayer.innerHTML = `<p style="color:white;text-align:center;">Unknown scene: ${sceneId}</p>`;
@@ -56,6 +65,7 @@ async function loadScene(sceneId) {
         inactiveLayer.innerHTML = svgMarkup;
 
         const svg = inactiveLayer.querySelector("svg");
+        currentSvg = svg;
 
         if (!svg) {
             console.log(`${scene.file} does not contain an SVG.`);
@@ -160,9 +170,64 @@ function bindNavigation(svg, scene) {
     }
 }
 
+function setupKeyboardNavigation() {
+    document.addEventListener("keydown", (e) => {
+        if (!currentScene) return;
+
+        const buttons = Array.isArray(currentScene.buttons) ? currentScene.buttons : [];
+
+        // It's a choice scene only if it has yes/no buttons
+        const isChoiceScene = buttons.some(b =>
+            b.id?.toLowerCase() === "yes" || b.id?.toLowerCase() === "no"
+        );
+
+        // Space or Arrow Up — advance on any non-choice scene
+        if (e.code === "Space" || e.code === "ArrowUp") {
+            e.preventDefault();
+            if (isChoiceScene) return;
+
+            const next = buttons.find(b => b.next);
+            if (next) {
+                clearPendingAutoAdvance();
+                currentSceneId = next.next;
+                loadScene(currentSceneId);
+            } else if (buttons.length === 0) {
+                clearPendingAutoAdvance();
+                currentSceneId = startSceneId;
+                loadScene(currentSceneId);
+            }
+        }
+
+        // Left Arrow — go to "no"
+        if (e.code === "ArrowLeft") {
+            e.preventDefault();
+            const noButton = buttons.find(b => b.id?.toLowerCase() === "no");
+            if (noButton?.next) {
+                playSound("click");
+                clearPendingAutoAdvance();
+                currentSceneId = noButton.next;
+                loadScene(currentSceneId);
+            }
+        }
+
+        // Right Arrow — go to "yes"
+        if (e.code === "ArrowRight") {
+            e.preventDefault();
+            const yesButton = buttons.find(b => b.id?.toLowerCase() === "yes");
+            if (yesButton?.next) {
+                playSound("click");
+                clearPendingAutoAdvance();
+                currentSceneId = yesButton.next;
+                loadScene(currentSceneId);
+            }
+        }
+    });
+}
+
 function clearPendingAutoAdvance() {
     window.clearTimeout(autoAdvanceTimeoutId);
     autoAdvanceTimeoutId = null;
 }
 
+setupKeyboardNavigation();
 loadScene(currentSceneId);
