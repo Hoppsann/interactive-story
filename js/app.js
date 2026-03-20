@@ -13,10 +13,12 @@ app.appendChild(layerB);
 let activeLayer = layerA;
 let inactiveLayer = layerB;
 
-
 const sounds = {
     click: new Audio("sound/click.mp3"),
+    fire: new Audio("sound/fire.mp3")
 };
+
+fire.
 
 function playSound(name) {
     const sound = sounds[name];
@@ -62,6 +64,16 @@ async function loadScene(sceneId) {
         highlightByColor(svg, "#fd9d49");
         highlightByColor(svg, "#ec5f46");
         crossfade();
+
+        if (svg.querySelector(".is-animated")) {
+            sounds.fire.loop = true;
+            if (sounds.fire.paused) {
+                playSound("fire");
+            }
+        } else {
+            sounds.fire.pause();
+            sounds.fire.currentTime = 0;
+        }
 
     } catch (error) {
         console.log(error);
