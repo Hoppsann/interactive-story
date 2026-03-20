@@ -1,61 +1,135 @@
-
-// get the html-element with the id "app" and store it in a variable
 const app = document.getElementById("app");
-const startSceneId = "intro";
-let currentSceneId = "intro";
+const startSceneId = "run";
+let currentSceneId = localStorage.getItem("currentSceneId") || "intro";
 let autoAdvanceTimeoutId = null;
+
+const layerA = document.createElement("div");
+const layerB = document.createElement("div");
+layerA.className = "layer";
+layerB.className = "layer hidden";
+app.appendChild(layerA);
+app.appendChild(layerB);
+
+let activeLayer = layerA;
+let inactiveLayer = layerB;
+
+const sounds = {
+    click: new Audio("sound/click.mp3"),
+    fire: new Audio("sound/fire.mp3")
+};
+
+const music = new Audio("sound/music.mp3");
+music.loop = true;
+music.volume = 0.5;
+
+document.addEventListener("click", () => music.play(), { once: true });
+
+function playSound(name) {
+    const sound = sounds[name];
+    if (!sound) return;
+    sound.currentTime = 0;
+    sound.play();
+}
 
 async function loadScene(sceneId) {
     clearPendingAutoAdvance();
+    localStorage.setItem("currentSceneId", sceneId);
 
-    // loading the scene the id from the storytree.js
     const scene = storyTree[sceneId];
 
-    // If the scene doesn't exist, show an error message
     if (!scene) {
-        app.innerHTML = `<p style="color:white;text-align:center;">Unknown scene: ${sceneId}</p>`;
+        inactiveLayer.innerHTML = `<p style="color:white;text-align:center;">Unknown scene: ${sceneId}</p>`;
+        crossfade();
         return;
     }
 
     try {
-        // Get the story-tree file from the file system.
         const response = await fetch(scene.file);
         if (!response.ok) {
             console.log(`Could not load ${scene.file}`);
-            app.innerHTML = `<p style="color:white;text-align:center;">Could not load ${scene.file}</p>`;
+            inactiveLayer.innerHTML = `<p style="color:white;text-align:center;">Could not load ${scene.file}</p>`;
+            crossfade();
             return;
         }
 
-        // Get the contents of the file
         const svgMarkup = await response.text();
+        inactiveLayer.innerHTML = svgMarkup;
 
-        // set the innerHTML of the app div to the contents of the file
-        app.innerHTML = svgMarkup;
-
-        const svg = app.querySelector("svg");
+        const svg = inactiveLayer.querySelector("svg");
 
         if (!svg) {
             console.log(`${scene.file} does not contain an SVG.`);
-            app.innerHTML = `<p style="color:white;text-align:center;">${scene.file} does not contain an SVG.</p>`;
+            inactiveLayer.innerHTML = `<p style="color:white;text-align:center;">${scene.file} does not contain an SVG.</p>`;
+            crossfade();
             return;
         }
 
-        // Set the size and preserve the aspect ratio of the SVG
         svg.setAttribute("preserveAspectRatio", "xMidYMid meet");
-
-        // Bind the buttons in the scene to their respective actions
         bindNavigation(svg, scene);
+        highlightByColor(svg, "#fd9d49");
+        highlightByColor(svg, "#ec5f46");
+        crossfade();
+
+        if (svg.querySelector(".is-animated")) {
+            sounds.fire.loop = true;
+            if (sounds.fire.paused) {
+                playSound("fire");
+            }
+        } else {
+            sounds.fire.pause();
+            sounds.fire.currentTime = 0;
+        }
+
     } catch (error) {
         console.log(error);
-        app.innerHTML = `<p style="color:white;text-align:center;">${error.message}</p>`;
+        inactiveLayer.innerHTML = `<p style="color:white;text-align:center;">${error.message}</p>`;
+        crossfade();
     }
 }
 
+function crossfade() {
+    inactiveLayer.style.zIndex = 1;
+    activeLayer.style.zIndex = 0;
+    inactiveLayer.classList.remove("hidden");
+    activeLayer.classList.add("hidden");
+
+    [activeLayer, inactiveLayer] = [inactiveLayer, activeLayer];
+}
+
+function highlightByColor(svg, targetHex) {
+    const normalized = targetHex.toLowerCase();
+    const allElements = svg.querySelectorAll("*");
+
+    for (const el of allElements) {
+        const attrFill = el.getAttribute("fill")?.toLowerCase();
+        const attrStroke = el.getAttribute("stroke")?.toLowerCase();
+
+        if (attrFill === normalized || attrStroke === normalized) {
+            el.classList.add("is-animated");
+            continue;
+        }
+
+        const style = getComputedStyle(el);
+        const computedFill = rgbToHex(style.fill);
+        const computedStroke = rgbToHex(style.stroke);
+
+        if (computedFill === normalized || computedStroke === normalized) {
+            el.classList.add("is-animated");
+        }
+    }
+}
+
+function rgbToHex(rgb) {
+    const match = rgb.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
+    if (!match) return null;
+    return "#" + [match[1], match[2], match[3]]
+        .map(n => parseInt(n).toString(16).padStart(2, "0"))
+        .join("");
+}
+
 function bindNavigation(svg, scene) {
-    // Get the configured buttons for the scene, or an empty array if none are configured
     const buttons = Array.isArray(scene.buttons) ? scene.buttons : [];
 
-    // if the scene does not have any buttons, wait 5000ms (5 seconds) and to to the start page
     if (Array.isArray(scene.buttons) && scene.buttons.length === 0) {
         autoAdvanceTimeoutId = window.setTimeout(() => {
             currentSceneId = startSceneId;
@@ -64,8 +138,6 @@ function bindNavigation(svg, scene) {
         return;
     }
 
-    // If the scene has buttons but don't have an id,
-    // wait 800ms (0.8 seconds) and go to the next scene
     for (const button of buttons) {
         if (!button.id && button.next) {
             autoAdvanceTimeoutId = window.setTimeout(() => {
@@ -75,35 +147,22 @@ function bindNavigation(svg, scene) {
             continue;
         }
 
-        // get the id for the button in the svg (rom figma)
         const target = svg.querySelector(`[id="${button.id}"]`);
+        if (!target) continue;
 
-        if (!target) {
-            continue;
-        }
-
-        // Set a class to show a hand when mouse
-        // cursor is over the button, to indicate that it's clickable
         target.classList.add("is-clickable");
 
-        // Set up the click event to go to the next scene
-        const goToNext = () => {
+        target.addEventListener("click", () => {
+            playSound("click");
             currentSceneId = button.next;
             loadScene(currentSceneId);
-        };
-
-        target.addEventListener("click", () => {
-            goToNext();
         });
     }
 }
 
 function clearPendingAutoAdvance() {
-    // Clear any pending auto-advance timeout
     window.clearTimeout(autoAdvanceTimeoutId);
     autoAdvanceTimeoutId = null;
 }
 
-
-// This method starts the show by loading the first scene.
 loadScene(currentSceneId);

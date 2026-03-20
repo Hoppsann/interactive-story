@@ -158,7 +158,7 @@ const storyTree = {
     "split-no-listen": {
         file: "assets/split-no-listen.svg",
         buttons: [
-            { id: "yes", next: "listen-enterrocket" },
+            { id: "yes", next: "listen-laborweapon" },
             { id: "no", next: "listen1-no" }
         ]
     },
@@ -206,14 +206,14 @@ const storyTree = {
     "listen4-no": {
         file: "assets/listen4-no.svg",
         buttons: [
-            { id: "next", next: "listen-laborweapon" }
+            { id: "next", next: "listen-enterrocket" }
         ]
     },
     "listen-laborweapon": {
         file: "assets/listen-laborweapon.svg",
         buttons: [
-            { id: "no", next: "laborweapon1-no" },
-            { id: "yes", next: "laborweapon-recognize" }
+            { id: "no", next: "focus2-no-device-no" },
+            { id: "yes", next: "laborweapon1-no" }
         ]
     },
     "laborweapon1-no": {
