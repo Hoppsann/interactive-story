@@ -47,6 +47,8 @@ async function loadScene(sceneId) {
 
         svg.setAttribute("preserveAspectRatio", "xMidYMid meet");
         bindNavigation(svg, scene);
+        highlightByColor(svg, "#fd9d49");
+        highlightByColor(svg, "#ec5f46");
         crossfade();
 
     } catch (error) {
@@ -57,14 +59,45 @@ async function loadScene(sceneId) {
 }
 
 function crossfade() {
-    // Bring inactive layer to front and fade it in
     inactiveLayer.style.zIndex = 1;
     activeLayer.style.zIndex = 0;
     inactiveLayer.classList.remove("hidden");
     activeLayer.classList.add("hidden");
 
-    // Swap roles
     [activeLayer, inactiveLayer] = [inactiveLayer, activeLayer];
+}
+
+function highlightByColor(svg, targetHex) {
+    const normalized = targetHex.toLowerCase();
+    const allElements = svg.querySelectorAll("*");
+
+    for (const el of allElements) {
+
+        const attrFill = el.getAttribute("fill")?.toLowerCase();
+        const attrStroke = el.getAttribute("stroke")?.toLowerCase();
+
+        if (attrFill === normalized || attrStroke === normalized) {
+            el.classList.add("is-animated");
+            continue;
+        }
+
+
+        const style = getComputedStyle(el);
+        const computedFill = rgbToHex(style.fill);
+        const computedStroke = rgbToHex(style.stroke);
+
+        if (computedFill === normalized || computedStroke === normalized) {
+            el.classList.add("is-animated");
+        }
+    }
+}
+
+function rgbToHex(rgb) {
+    const match = rgb.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
+    if (!match) return null;
+    return "#" + [match[1], match[2], match[3]]
+        .map(n => parseInt(n).toString(16).padStart(2, "0"))
+        .join("");
 }
 
 function bindNavigation(svg, scene) {
