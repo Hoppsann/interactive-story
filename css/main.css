@@ -96,3 +96,13 @@ button {
     text-shadow: 0px 0.25vw 0.3vw black;
     cursor: pointer;
 }
+
+p {
+    position: absolute;
+    z-index: 1;
+    width: 10vw;
+    right: 0;
+    top: 0;
+    margin: 1.5vw;
+    font-size: 1.5vw;
+}
